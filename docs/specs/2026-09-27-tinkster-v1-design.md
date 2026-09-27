@@ -104,14 +104,15 @@ Overlay card with a stamped headline (e.g. *Cracked!*, *Locked out*, *Game over*
 |---|---|---|
 | `--paper` | `#f7f5f0` | `#121212` |
 | `--ink` | `#161514` | `#ecebe6` |
-| `--accent` | vermilion (mockup `#d8432b`), final value tuned to meet WCAG AA 4.5:1 for white text on accent and accent on paper | lighter vermilion (mockup `#ff6a4d`), tuned the same way |
+| `--accent` | `#c93c25` (5.05:1 under white text, 4.64:1 on paper) | `#ff6a4d` (6.62:1 on slate) |
+| `--on-accent` | `#ffffff` | `#121212` (text on accent fills; white would fail AA on the dark accent) |
 
 - The theme follows `prefers-color-scheme`; there is no manual toggle.
 - Colored emoji appear only in game content where the emoji is the point (the Emojigrams reveal). The UI never uses emoji.
 - Game state never relies on color alone: solid, hatched and outlined forms carry the meaning, and color reinforces it.
 
 ### 6.2 Type
-- Display: **Fraunces**. UI: **Inter**. Both OFL, self-hosted, Latin subsets, woff2, ≤ 80 KB total.
+- Display: **Fraunces**. UI: **Inter**. Both OFL, self-hosted, Latin subsets, woff2, ≤ 110 KB total: Fraunces variable `wght` normal (≈37 KB) + Fraunces 700 italic, used only for the wordmark and stamps (≈23 KB) + Inter variable `wght` (≈48 KB). The earlier 80 KB figure was an estimate; these are measured Fontsource sizes.
 - Tabular numerals for timers and scores.
 
 ### 6.3 Components and ornament
@@ -170,7 +171,7 @@ src/
     rules.ts                    pure state + reducers + scoring (no DOM, no timers)
     rules.test.ts               unit + property tests
     View.svelte                 board + controls; talks to the platform only via GameContext
-    Rules.svelte                content of the rules sheet
+    HowToPlay.svelte            content of the rules sheet (exported as `Rules`; named to avoid a case clash with rules.ts)
     icon.svg
 scripts/
   build-words.ts                reproducible word list build (§9)
@@ -185,15 +186,20 @@ docs/
 ```ts
 type Category = 'words' | 'logic' | 'arcade';
 
-interface GameDefinition<S = unknown, O = unknown> {
+type Options = Record<string, string>;   // every option is a string enum
+interface OptionField { key: string; label: string; default: string;
+  choices: { value: string; label: string; hint?: string }[] }
+
+interface GameDefinition<S = unknown, O extends Options = Options> {
   id: string;                          // url slug, e.g. 'break-the-code'
   title: string;
   pitch: string;                       // one line for the home tile
   category: Category;
   minutes: [min: number, max: number];
   icon: string;                        // imported SVG
+  pace: 'turn-based' | 'timed' | 'realtime'; // timed/realtime get the 3-2-1 resume countdown
   saveVersion: number;                 // bump when S changes shape
-  options?: OptionSpec<O>;             // renders the start sheet; omitted → no sheet
+  options?: OptionField[];             // renders the start sheet; omitted → no sheet
   load(): Promise<GameModule<S, O>>;   // dynamic import → code-split
 }
 
@@ -216,7 +222,7 @@ interface GameContext<S> {
   readonly paused: boolean;            // reactive; owned by the frame
   rng: Rng;                            // seeded; seed comes from the frame
   feedback: Feedback;                  // sound(name), haptic(pattern)
-  timer(ms: number): PausableTimer;    // tied to ctx.paused
+  timer(ms: number, onExpire: () => void): PausableTimer; // tied to ctx.paused
 }
 
 interface GameResult {
@@ -352,5 +358,4 @@ Home → `/play/<id>` → frame reads the resume slot → if there's no save and
 
 ## 13. Open items
 - Register a domain (`tinkster.games` or `tinkster.app`) before any public announcement; switching sets `paths.base` to `''`.
-- Final accent hex values for light and dark (§6.1), picked during implementation so axe's color-contrast check passes in both themes.
 - Backlog games each get their own spec: Honeycomb, Emojigrams (build-time emoji-to-grid with a uniqueness solver, open-licensed emoji set), Brick Breaker, Alien Wave, Road Hop.
