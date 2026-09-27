@@ -1,7 +1,11 @@
 import { defineGame } from '../../types';
 import type { FixtureOptions, FixtureState } from './state';
 
-export const fixtureGame = defineGame<FixtureState, FixtureOptions>({
+// Pure-annotated below so bundlers can tree-shake this call (and its dynamic
+// `import('./module')`) out of production builds when nothing references
+// `fixtureGame`, so the test-only fixture game never ships as a chunk when
+// __TEST_HOOKS__ is false.
+export const fixtureGame = /* @__PURE__ */ defineGame<FixtureState, FixtureOptions>({
 	id: 'test-fixture',
 	title: 'Test Fixture',
 	pitch: 'Platform test game',
