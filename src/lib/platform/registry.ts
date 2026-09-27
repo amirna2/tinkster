@@ -1,3 +1,4 @@
+import { fixtureGame } from './testing/fixture';
 import type { AnyGame, Category } from './types';
 
 /**
@@ -7,7 +8,7 @@ import type { AnyGame, Category } from './types';
 export const games: AnyGame[] = [];
 
 /** Test-only games, compiled in only for the e2e build (PUBLIC_TEST_HOOKS=1). */
-const testGames: AnyGame[] = [];
+const testGames: AnyGame[] = __TEST_HOOKS__ ? [fixtureGame] : [];
 
 /** Everything that gets a /play/<id> route. */
 export const routableGames: AnyGame[] = [...games, ...testGames];
