@@ -73,6 +73,13 @@ export function attachSwipe(
 
 	const down = (e: PointerEvent) => {
 		origin = { x: e.clientX, y: e.clientY, id: e.pointerId };
+		// Capture the pointer to track movements outside the element; errors are ignored since
+		// capture is an enhancement—swipe works without it if the element doesn't support it.
+		try {
+			el.setPointerCapture?.(e.pointerId);
+		} catch {
+			// Ignore: capture failed or unsupported; swipe continues without it.
+		}
 	};
 	const move = (e: PointerEvent) => {
 		if (!origin || e.pointerId !== origin.id) return;

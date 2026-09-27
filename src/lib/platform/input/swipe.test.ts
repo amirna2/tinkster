@@ -89,4 +89,13 @@ describe('attachSwipe', () => {
 		el.dispatchEvent(pointer('pointermove', 60, 0));
 		expect(onSwipe).not.toHaveBeenCalled();
 	});
+
+	it('calls setPointerCapture on pointerdown', () => {
+		const el = fakeElement();
+		el.setPointerCapture = vi.fn();
+		const onSwipe = vi.fn();
+		attachSwipe(el, onSwipe);
+		el.dispatchEvent(pointer('pointerdown', 0, 0, 42));
+		expect(el.setPointerCapture).toHaveBeenCalledWith(42);
+	});
 });
