@@ -1,0 +1,152 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>tinkster mockup: visual-style-bw</title>
+<body style="margin:0;padding:24px;background:#e9e7e2;color:#161514;font-family:system-ui,sans-serif">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,800;1,9..144,700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  .phones { display:flex; gap:28px; flex-wrap:wrap; justify-content:center; margin-top:18px; }
+  .pick { cursor:pointer; border-radius:30px; padding:10px; border:2px solid transparent; transition:border-color .15s; }
+  .pick.selected { border-color:#7c9cff; }
+  .pick h3 { margin:12px 4px 2px; }
+  .pick p.d { margin:0 4px; max-width:290px; font-size:13px; opacity:.8; line-height:1.4; }
+  .phone { width:290px; border-radius:30px; overflow:hidden; box-shadow: 0 0 0 8px #2a2b31, 0 20px 40px rgba(0,0,0,.35); }
+
+  /* theme tokens */
+  .bw   { --paper:#f7f5f0; --ink:#161514; --accent:#161514; }
+  .bwr  { --paper:#f7f5f0; --ink:#161514; --accent:#d8432b; }
+  .dark { --paper:#121212; --ink:#ecebe6; --accent:#ff6a4d; }
+
+  .scr { background:var(--paper); color:var(--ink); font-family:Inter, system-ui, sans-serif; padding:18px 16px 20px; }
+  .top { display:flex; align-items:center; justify-content:space-between; }
+  .brand { font-family:Fraunces, Georgia, serif; font-weight:800; font-size:24px; letter-spacing:-.6px; }
+  .brand span { font-style:italic; color:var(--accent); }
+  .dice { border:1.5px solid var(--ink); border-radius:999px; padding:6px 11px; font-weight:600; font-size:12px; }
+  .resume { margin:12px 0 4px; padding:10px 14px; border-radius:12px; background:var(--ink); color:var(--paper); display:flex; justify-content:space-between; align-items:center; font-size:12px; }
+  .resume b { display:block; font-size:14px; font-family:Fraunces,serif; font-weight:600; }
+  .go { background:var(--paper); color:var(--ink); border-radius:999px; padding:6px 12px; font-weight:700; font-size:12px; }
+  .bwr .go, .dark .go { background:var(--accent); color:#fff; }
+  .sec { font-family:Fraunces,serif; font-size:15px; font-weight:600; margin:16px 2px 8px; display:flex; align-items:center; gap:8px; }
+  .sec::after { content:""; flex:1; border-top:1.5px solid var(--ink); opacity:.2; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .rt { border-radius:12px; border:1.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); background:var(--paper);
+        padding:11px 12px; height:100px; position:relative; overflow:hidden; box-sizing:border-box; }
+  .rt b { font-family:Fraunces,serif; font-size:15px; font-weight:600; display:block; line-height:1.15; position:relative; }
+  .rt span { font-size:10.5px; opacity:.7; display:block; margin-top:3px; line-height:1.25; max-width:88px; position:relative; }
+  .rt .t { position:absolute; left:12px; bottom:10px; font-size:10px; border:1px solid var(--ink); border-radius:999px; font-weight:600; padding:1px 7px; background:var(--paper); }
+  .rt svg { position:absolute; right:8px; bottom:8px; width:40px; height:40px; stroke:var(--ink); fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+  .rt svg .acc { stroke:var(--accent); }
+  .rt svg .fill { fill:var(--ink); stroke:none; }
+  /* halftone textures per category, in ink */
+  .tx { position:absolute; inset:0; opacity:.13; pointer-events:none; }
+  .dots  { background-image:radial-gradient(var(--ink) 1.1px, transparent 1.3px); background-size:7px 7px; }
+  .lines { background-image:repeating-linear-gradient(45deg, var(--ink) 0 1px, transparent 1px 6px); }
+  .grid-tx { background-image:linear-gradient(var(--ink) 1px, transparent 1px), linear-gradient(90deg, var(--ink) 1px, transparent 1px); background-size:8px 8px; }
+
+  .divider { margin:16px 0 10px; font-size:10px; letter-spacing:1.4px; text-transform:uppercase; opacity:.45; text-align:center; }
+  .guess { display:flex; align-items:center; gap:6px; margin-bottom:7px; }
+  .dg { width:34px; height:40px; display:flex; align-items:center; justify-content:center; border:1.5px solid var(--ink); border-radius:8px;
+        font-family:Fraunces,serif; font-weight:800; font-size:20px; background:var(--paper); box-sizing:border-box; }
+  .dg.hit { background:var(--ink); color:var(--paper); }
+  .bwr .dg.hit, .dark .dg.hit { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .dg.near { background-image:repeating-linear-gradient(45deg, color-mix(in srgb, var(--ink) 30%, transparent) 0 1.5px, transparent 1.5px 5px); }
+  .fb { margin-left:auto; display:grid; grid-template-columns:repeat(2,10px); gap:4px; }
+  .fb i { width:10px; height:10px; display:block; border-radius:50%; border:1.5px solid var(--ink); box-sizing:border-box; opacity:.25; }
+  .fb i.h { background:var(--ink); opacity:1; } .fb i.n { opacity:1; }
+  .bwr .fb i.h, .dark .fb i.h { background:var(--accent); border-color:var(--accent); }
+  .legend { font-size:10px; opacity:.6; margin-top:4px; text-align:center; }
+</style>
+
+<h2>Black &amp; white paper</h2>
+<p class="subtitle">Ink on paper, no tile colors. Games are told apart by line icons and halftone textures (dots = words, lines = logic, grid = arcade). Hit/near/miss use fill and hatching instead of green and yellow, which also makes them readable for colorblind players. Three versions: pure B&amp;W, B&amp;W with one ink accent, and how the accent version looks in dark mode.</p>
+
+<div class="phones">
+
+  <!-- ============ PURE B&W ============ -->
+  <div class="pick" data-choice="bw" onclick="toggleSelect(this)">
+    <div class="phone bw"><div class="scr">
+      <div class="top"><div class="brand">tink<span>ster</span></div><div class="dice">⚄ Surprise me</div></div>
+      <div class="resume"><div><b>Break the Code</b>guess 4 of 8</div><div class="go">Resume</div></div>
+      <div class="sec">Words &amp; numbers</div>
+      <div class="grid">
+        <div class="rt"><div class="tx dots"></div><b>Letters &amp; Numbers</b><span>longest word, hit the target</span><div class="t">2–10m</div>
+          <svg viewBox="0 0 40 40"><path d="M6 32 L13 10 L20 32 M9 25 H17"/><path d="M24 32 V16 M24 20 q5-5 10 0 V32"/></svg></div>
+        <div class="rt"><div class="tx dots"></div><b>Honeycomb</b><span>words from 7 letters</span><div class="t">5–15m</div>
+          <svg viewBox="0 0 40 40"><path d="M20 6 L32 13 V27 L20 34 L8 27 V13 Z"/><path d="M20 14 L26 17.5 V24.5 L20 28 L14 24.5 V17.5 Z"/></svg></div>
+      </div>
+      <div class="sec">Logic</div>
+      <div class="grid">
+        <div class="rt"><div class="tx lines"></div><b>Break the Code</b><span>4 digits, 8 guesses</span><div class="t">2–3m</div>
+          <svg viewBox="0 0 40 40"><rect x="8" y="18" width="24" height="16" rx="3"/><path d="M13 18 V13 a7 7 0 0 1 14 0 V18"/><circle cx="20" cy="26" r="2" class="fill"/></svg></div>
+        <div class="rt"><div class="tx lines"></div><b>Emojigrams</b><span>reveal the hidden emoji</span><div class="t">3–10m</div>
+          <svg viewBox="0 0 40 40"><rect x="7" y="7" width="26" height="26" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" class="fill"/><rect x="20" y="20" width="6.5" height="6.5" class="fill"/><rect x="7" y="20" width="6.5" height="6.5" class="fill"/></svg></div>
+      </div>
+      <div class="divider">— in game —</div>
+      <div class="guess"><div class="dg">1</div><div class="dg near">2</div><div class="dg">3</div><div class="dg hit">4</div><div class="fb"><i class="h"></i><i class="n"></i><i></i><i></i></div></div>
+      <div class="guess"><div class="dg near">5</div><div class="dg hit">2</div><div class="dg">6</div><div class="dg hit">4</div><div class="fb"><i class="h"></i><i class="h"></i><i class="n"></i><i></i></div></div>
+      <div class="legend">■ solid = right spot · ▨ hatched = wrong spot</div>
+    </div></div>
+    <h3>BW · Pure ink</h3>
+    <p class="d">Strictly black on cream. Very distinctive and calm, like a newspaper puzzle page. Winning moments have to come from motion rather than color.</p>
+  </div>
+
+  <!-- ============ B&W + ACCENT ============ -->
+  <div class="pick" data-choice="bw-accent" onclick="toggleSelect(this)">
+    <div class="phone bwr"><div class="scr">
+      <div class="top"><div class="brand">tink<span>ster</span></div><div class="dice">⚄ Surprise me</div></div>
+      <div class="resume"><div><b>Break the Code</b>guess 4 of 8</div><div class="go">Resume</div></div>
+      <div class="sec">Words &amp; numbers</div>
+      <div class="grid">
+        <div class="rt"><div class="tx dots"></div><b>Letters &amp; Numbers</b><span>longest word, hit the target</span><div class="t">2–10m</div>
+          <svg viewBox="0 0 40 40"><path d="M6 32 L13 10 L20 32 M9 25 H17"/><path class="acc" d="M24 32 V16 M24 20 q5-5 10 0 V32"/></svg></div>
+        <div class="rt"><div class="tx dots"></div><b>Honeycomb</b><span>words from 7 letters</span><div class="t">5–15m</div>
+          <svg viewBox="0 0 40 40"><path d="M20 6 L32 13 V27 L20 34 L8 27 V13 Z"/><path class="acc" d="M20 14 L26 17.5 V24.5 L20 28 L14 24.5 V17.5 Z"/></svg></div>
+      </div>
+      <div class="sec">Logic</div>
+      <div class="grid">
+        <div class="rt"><div class="tx lines"></div><b>Break the Code</b><span>4 digits, 8 guesses</span><div class="t">2–3m</div>
+          <svg viewBox="0 0 40 40"><rect x="8" y="18" width="24" height="16" rx="3"/><path class="acc" d="M13 18 V13 a7 7 0 0 1 14 0 V18"/><circle cx="20" cy="26" r="2" class="fill"/></svg></div>
+        <div class="rt"><div class="tx lines"></div><b>Emojigrams</b><span>reveal the hidden emoji</span><div class="t">3–10m</div>
+          <svg viewBox="0 0 40 40"><rect x="7" y="7" width="26" height="26" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" class="fill"/><rect x="20" y="20" width="6.5" height="6.5" style="fill:var(--accent)"/><rect x="7" y="20" width="6.5" height="6.5" class="fill"/></svg></div>
+      </div>
+      <div class="divider">— in game —</div>
+      <div class="guess"><div class="dg">1</div><div class="dg near">2</div><div class="dg">3</div><div class="dg hit">4</div><div class="fb"><i class="h"></i><i class="n"></i><i></i><i></i></div></div>
+      <div class="guess"><div class="dg near">5</div><div class="dg hit">2</div><div class="dg">6</div><div class="dg hit">4</div><div class="fb"><i class="h"></i><i class="h"></i><i class="n"></i><i></i></div></div>
+      <div class="legend">■ solid = right spot · ▨ hatched = wrong spot</div>
+    </div></div>
+    <h3>BW+1 · Ink with one red accent</h3>
+    <p class="d">Same page, plus a single vermilion "second ink" used sparingly for success, calls to action and the brand. Wins have a color to pop into, like a red stamp on a puzzle book.</p>
+  </div>
+
+  <!-- ============ DARK MODE ============ -->
+  <div class="pick" data-choice="dark" onclick="toggleSelect(this)">
+    <div class="phone dark"><div class="scr">
+      <div class="top"><div class="brand">tink<span>ster</span></div><div class="dice">⚄ Surprise me</div></div>
+      <div class="resume"><div><b>Break the Code</b>guess 4 of 8</div><div class="go">Resume</div></div>
+      <div class="sec">Words &amp; numbers</div>
+      <div class="grid">
+        <div class="rt"><div class="tx dots"></div><b>Letters &amp; Numbers</b><span>longest word, hit the target</span><div class="t">2–10m</div>
+          <svg viewBox="0 0 40 40"><path d="M6 32 L13 10 L20 32 M9 25 H17"/><path class="acc" d="M24 32 V16 M24 20 q5-5 10 0 V32"/></svg></div>
+        <div class="rt"><div class="tx dots"></div><b>Honeycomb</b><span>words from 7 letters</span><div class="t">5–15m</div>
+          <svg viewBox="0 0 40 40"><path d="M20 6 L32 13 V27 L20 34 L8 27 V13 Z"/><path class="acc" d="M20 14 L26 17.5 V24.5 L20 28 L14 24.5 V17.5 Z"/></svg></div>
+      </div>
+      <div class="sec">Arcade</div>
+      <div class="grid">
+        <div class="rt"><div class="tx grid-tx"></div><b>Snake</b><span>swipe to steer</span><div class="t">1–5m</div>
+          <svg viewBox="0 0 40 40"><path d="M8 30 H20 V20 H30 V10"/><circle cx="30" cy="10" r="2.5" class="fill" style="fill:var(--accent)"/></svg></div>
+        <div class="rt"><div class="tx grid-tx"></div><b>Brick Breaker</b><span>drag the paddle</span><div class="t">2–5m</div>
+          <svg viewBox="0 0 40 40"><rect x="6" y="8" width="8" height="5"/><rect x="16" y="8" width="8" height="5"/><rect x="26" y="8" width="8" height="5"/><circle cx="22" cy="24" r="2.5" class="acc"/><path d="M12 33 H28"/></svg></div>
+      </div>
+      <div class="divider">— in game —</div>
+      <div class="guess"><div class="dg">1</div><div class="dg near">2</div><div class="dg">3</div><div class="dg hit">4</div><div class="fb"><i class="h"></i><i class="n"></i><i></i><i></i></div></div>
+      <div class="guess"><div class="dg near">5</div><div class="dg hit">2</div><div class="dg">6</div><div class="dg hit">4</div><div class="fb"><i class="h"></i><i class="h"></i><i class="n"></i><i></i></div></div>
+      <div class="legend">■ solid = right spot · ▨ hatched = wrong spot</div>
+    </div></div>
+    <h3>BW+1 · Dark mode</h3>
+    <p class="d">The accent version inverted (chalk on slate), shown with the Arcade tiles. This is what the site becomes when your phone is in dark mode. Pure ink gets the same treatment, just without the red.</p>
+  </div>
+
+</div>
+
+</body>

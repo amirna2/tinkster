@@ -1,0 +1,10 @@
+.superpowers/
+node_modules/
+.svelte-kit/
+build/
+test-results/
+playwright-report/
+.DS_Store
+CLAUDE.md
+AI_DEVELOPER.md
+CONTEXT.md

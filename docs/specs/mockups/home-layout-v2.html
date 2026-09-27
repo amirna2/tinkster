@@ -1,0 +1,103 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>tinkster mockup: home-layout-v2</title>
+<body style="margin:0;padding:24px;background:#e9e7e2;color:#161514;font-family:system-ui,sans-serif">
+<style>
+  .phones { display:flex; gap:28px; flex-wrap:wrap; justify-content:center; margin-top:18px; }
+  .pick { cursor:pointer; border-radius:30px; padding:10px; border:2px solid transparent; transition:border-color .15s; }
+  .pick.selected { border-color:#7c9cff; }
+  .pick h3 { margin:12px 4px 2px; }
+  .pick p.d { margin:0 4px; max-width:300px; font-size:13px; opacity:.8; line-height:1.4; }
+  .phone { width:300px; height:640px; border-radius:30px; overflow:hidden; position:relative;
+           background:#14151a; color:#f2f2f5; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
+           box-shadow: 0 0 0 8px #2a2b31, 0 20px 40px rgba(0,0,0,.35); }
+  .scr { padding:18px 16px; height:100%; box-sizing:border-box; overflow:hidden; }
+  .top { display:flex; align-items:center; justify-content:space-between; }
+  .brand { font-weight:800; font-size:22px; letter-spacing:-.5px; }
+  .brand span { color:#ffcf4a; }
+  .dice { background:#23252d; border-radius:999px; padding:7px 12px; font-weight:700; font-size:12px; }
+  .resume { margin:12px 0 4px; padding:10px 14px; border-radius:16px; background:linear-gradient(135deg,#2d6cdf,#7b4ce0);
+            display:flex; align-items:center; justify-content:space-between; font-size:12px; }
+  .resume b { display:block; font-size:14px; }
+  .resume .go { background:#fff; color:#2d3a8c; border-radius:999px; padding:6px 12px; font-weight:700; font-size:12px; }
+  .sec { font-size:11px; letter-spacing:1.2px; text-transform:uppercase; opacity:.5; margin:14px 2px 8px; }
+  .c1{background:#ffcf4a;color:#3a2a00}.c2{background:#ff7a59;color:#3a1200}.c3{background:#3fd0a4;color:#00301f}
+  .c4{background:#9b8cff;color:#1b1150}.c5{background:#4ec3ff;color:#00283d}.c6{background:#ff5c8a;color:#3d0016}
+  .c7{background:#b6e35a;color:#1f2f00}.c8{background:#ffa53d;color:#3a1f00}
+
+  /* H1: rich grid */
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .rt { border-radius:18px; padding:11px 12px; height:104px; position:relative; overflow:hidden; box-sizing:border-box; }
+  .rt b { font-size:14px; display:block; letter-spacing:-.2px; line-height:1.15; }
+  .rt span { font-size:10.5px; opacity:.78; display:block; margin-top:3px; line-height:1.25; max-width:92px; }
+  .rt .g { position:absolute; right:8px; bottom:4px; font-size:34px; }
+  .rt .t { position:absolute; left:12px; bottom:10px; font-size:10px; font-weight:700; background:rgba(0,0,0,.14); padding:2px 7px; border-radius:999px; }
+
+  /* H2: shelves */
+  .shelf { display:flex; gap:10px; margin-right:-16px; overflow:hidden; }
+  .sc { flex:0 0 200px; border-radius:20px; padding:14px; height:112px; position:relative; overflow:hidden; box-sizing:border-box; }
+  .sc b { font-size:17px; display:block; letter-spacing:-.3px; } .sc span { font-size:11px; opacity:.8; }
+  .sc .g { position:absolute; right:10px; bottom:4px; font-size:48px; }
+  .sc .t { position:absolute; left:14px; bottom:12px; font-size:10px; font-weight:700; background:rgba(0,0,0,.14); padding:2px 8px; border-radius:999px; }
+</style>
+
+<h2>Round 2: A's structure with C's personality</h2>
+<p class="subtitle">Both carry over C's pitch line, time estimate and "Surprise me" (now a 🎲 button in the header). Both show all 8 planned games so you can see how each handles a full list. The phones are cropped; the real page scrolls.</p>
+
+<div class="phones">
+
+  <div class="pick" data-choice="h1" onclick="toggleSelect(this)">
+    <div class="phone"><div class="scr">
+      <div class="top"><div class="brand">tink<span>ster</span></div><div class="dice">🎲 Surprise me</div></div>
+      <div class="resume"><div><b>Break the Code</b>guess 4 of 8</div><div class="go">Resume</div></div>
+      <div class="sec">Words &amp; numbers</div>
+      <div class="grid">
+        <div class="rt c1"><b>Letters &amp; Numbers</b><span>longest word, hit the target</span><div class="t">2–10m</div><div class="g">🔤</div></div>
+        <div class="rt c2"><b>Honeycomb</b><span>words from 7 letters</span><div class="t">5–15m</div><div class="g">🐝</div></div>
+      </div>
+      <div class="sec">Logic</div>
+      <div class="grid">
+        <div class="rt c4"><b>Break the Code</b><span>4 digits, 8 guesses</span><div class="t">2–3m</div><div class="g">🔐</div></div>
+        <div class="rt c3"><b>Emojigrams</b><span>reveal the hidden emoji</span><div class="t">3–10m</div><div class="g">🧩</div></div>
+      </div>
+      <div class="sec">Arcade</div>
+      <div class="grid">
+        <div class="rt c5"><b>Snake</b><span>swipe to steer</span><div class="t">1–5m</div><div class="g">🐍</div></div>
+        <div class="rt c6"><b>Brick Breaker</b><span>drag the paddle</span><div class="t">2–5m</div><div class="g">🧱</div></div>
+        <div class="rt c7"><b>Alien Wave</b><span>hold to fire</span><div class="t">2–5m</div><div class="g">👾</div></div>
+        <div class="rt c8"><b>Road Hop</b><span>tap to hop</span><div class="t">1–3m</div><div class="g">🐸</div></div>
+      </div>
+    </div></div>
+    <h3>H1 · Rich grid</h3>
+    <p class="d">A's two-column grid, but taller tiles that carry C's pitch line, time badge and big glyph. Everything is visible with little scrolling. Stays tidy up to ~20 games.</p>
+  </div>
+
+  <div class="pick" data-choice="h2" onclick="toggleSelect(this)">
+    <div class="phone"><div class="scr">
+      <div class="top"><div class="brand">tink<span>ster</span></div><div class="dice">🎲 Surprise me</div></div>
+      <div class="resume"><div><b>Break the Code</b>guess 4 of 8</div><div class="go">Resume</div></div>
+      <div class="sec">Words &amp; numbers</div>
+      <div class="shelf">
+        <div class="sc c1"><b>Letters &amp; Numbers</b><span>longest word · hit the target</span><div class="t">2–10 min</div><div class="g">🔤</div></div>
+        <div class="sc c2"><b>Honeycomb</b><span>words from 7 letters</span><div class="t">5–15 min</div><div class="g">🐝</div></div>
+      </div>
+      <div class="sec">Logic</div>
+      <div class="shelf">
+        <div class="sc c4"><b>Break the Code</b><span>4 digits · 8 guesses</span><div class="t">2–3 min</div><div class="g">🔐</div></div>
+        <div class="sc c3"><b>Emojigrams</b><span>reveal the hidden emoji</span><div class="t">3–10 min</div><div class="g">🧩</div></div>
+      </div>
+      <div class="sec">Arcade</div>
+      <div class="shelf">
+        <div class="sc c5"><b>Snake</b><span>swipe to steer</span><div class="t">1–5 min</div><div class="g">🐍</div></div>
+        <div class="sc c6"><b>Brick Breaker</b><span>drag the paddle</span><div class="t">2–5 min</div><div class="g">🧱</div></div>
+        <div class="sc c7"><b>Alien Wave</b><span>hold to fire</span><div class="t">2–5 min</div><div class="g">👾</div></div>
+      </div>
+    </div></div>
+    <h3>H2 · Category shelves</h3>
+    <p class="d">C's big cards arranged in horizontally swiping rows, one per category, with the next card peeking in at the edge (App Store style). Bolder cards, but some games start off-screen.</p>
+  </div>
+
+</div>
+
+</body>
