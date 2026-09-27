@@ -16,3 +16,17 @@ test('offers to resume the most recent unfinished game', async ({ page }) => {
 	await resume.click();
 	await expect(page.getByTestId('count')).toHaveText('1');
 });
+
+test('lists Break the Code under Logic', async ({ page }) => {
+	await page.goto('./');
+	const logic = page.getByRole('region', { name: 'Logic' });
+	await logic.getByRole('link', { name: /Break the Code/ }).click();
+	await expect(page).toHaveURL(/\/play\/break-the-code$/);
+});
+
+test('Surprise me opens a game', async ({ page }) => {
+	await page.goto('./');
+	await page.getByRole('button', { name: 'Surprise me' }).click();
+	await expect(page).toHaveURL(/\/play\/[a-z0-9-]+$/);
+	await expect(page.getByTestId('game-frame')).toBeVisible();
+});
