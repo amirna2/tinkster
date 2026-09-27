@@ -1,8 +1,8 @@
 # tinkster: session handoff
 
-- **Last updated:** 2026-09-27 (end of session 1: brainstorm → spec → Plan 1)
-- **Status:** Design approved, Plan 1 written. **No implementation code exists yet.**
-- **Next action:** the author picks an execution mode for Plan 1 (see §6), then Task 1 starts.
+- **Last updated:** 2026-09-27 (end of session 1: brainstorm → spec → Plan 1 → execution mode chosen)
+- **Status:** Design approved, Plan 1 written. Execution mode decided: **subagent-driven**. **Nothing executed yet:** no feature branch, no worktree, no code.
+- **Next action:** start Plan 1 execution **only when the author says so** (see §6 and §10). The author paused before execution in order to compact the session.
 
 ## 1. How to resume (read in this order)
 
@@ -111,8 +111,8 @@ All are committed and were reported to the author:
 
 ## 6. Next steps
 
-1. **Waiting on the author:** choose Plan 1 execution mode. Offered: **(1) subagent-driven (recommended)** via `superpowers:subagent-driven-development`, or (2) inline via `superpowers:executing-plans`.
-2. Branch setup (from the plan): `main` is unborn, so `git checkout docs/v1-design && git checkout -b feat/v1-foundation`.
+1. **Decided:** Plan 1 runs **subagent-driven** (`superpowers:subagent-driven-development`): a fresh implementer subagent per task, a task review after each, and a final whole-branch review. **Wait for the author's go-ahead before starting.** Setup details are in §10.
+2. Workspace (from §10): isolated worktree on a new branch `feat/v1-foundation` created from `docs/v1-design` (`main` is unborn).
 3. Execute Tasks 1–17. Built-in stop points:
    - **Task 15:** visual baselines need **Docker** (availability on the author's Mac is unknown), and a human must look at the six screenshots before they're committed.
    - **Task 16:** **ask the author** before `gh repo create`, pushing, or enabling Pages. Confirm the repo name `tinkster`, visibility (public) and the account.
@@ -168,3 +168,58 @@ Check these first if a step misbehaves:
 - **Errors inside event handlers aren't caught by `<svelte:boundary>`.** Only render/effect errors are. The fixture's Crash button deliberately throws during render.
 - **`svelte-check --fail-on-warnings`:** fix a11y warnings rather than suppressing them.
 - **The registry contract test imports `.svelte` modules under Vitest's node environment.** If that fails, check the plugin/condition setup before weakening the test.
+
+## 10. Executing Plan 1 (subagent-driven): setup checklist for the resumed session
+
+Do these in order **after** the author says to start.
+
+1. **Load the skills.**
+   - Invoke `superpowers:subagent-driven-development`. It will call for `superpowers:using-git-worktrees`.
+   - Also follow the author's `git-workflow` skill for every commit and PR.
+2. **Workspace isolation.**
+   - The repo is a normal checkout at `~/dev/tinkster`, currently on `docs/v1-design` with a clean tree. No worktree exists.
+   - The worktree skill asks for consent before creating one. **The author has not answered that yet, so ask.**
+   - Recommended answer: yes. Prefer the native `EnterWorktree` tool (deferred; load it with ToolSearch).
+   - Git fallback: first add `.worktrees/` to `.gitignore` and commit that on `docs/v1-design`. Then run `git worktree add .worktrees/v1-foundation -b feat/v1-foundation docs/v1-design`.
+   - If the author declines, work in place: `git checkout -b feat/v1-foundation` (from `docs/v1-design`).
+3. **Baseline.** There's no `package.json` yet, so there are no baseline tests. Task 1 creates the toolchain.
+4. **SDD workspace and ledger.**
+   - Scripts are in `~/.claude/plugins/cache/claude-plugins-official/superpowers/6.3.0/skills/subagent-driven-development/scripts/`: `sdd-workspace`, `task-brief`, `review-package`.
+   - Run `sdd-workspace docs/plans/2026-09-27-plan-1-foundation.md`. It prints `<repo>/.superpowers/sdd/<plan-basename>/`, which is gitignored via `.superpowers/`.
+   - The ledger is `<workspace>/progress.md`. Its first line must be `# SDD ledger — plan: docs/plans/2026-09-27-plan-1-foundation.md`.
+   - **After any compaction, trust the ledger and `git log` over memory.** Tasks with a `Task N: complete` line are done; never re-dispatch them.
+5. **Pre-flight conflict scan** (required by the skill before Task 1). Write a table to the ledger:
+   - One row per pair of tasks that share a file or interface.
+   - One row per task, checking self-consistency.
+
+   Rule on anything found, as `Ruling: … — why — cost if wrong`. Known shared surfaces to check:
+
+   | Surface | Touched by |
+   |---|---|
+   | `registry.ts` | Tasks 4 → 10 → 13 |
+   | `package.json` scripts | Tasks 1, 10, 14, 15 |
+   | `svelte.config.js` | Tasks 1 → 14 (SW files) → 15 (CSP) |
+   | `src/app.html` | Tasks 1 → 14 |
+   | `src/routes/+page.svelte` | Tasks 5 → 11 |
+   | `e2e/home.spec.ts` | Tasks 11 → 13 |
+   | `e2e/helpers.ts` | created in 13, used by 14 and 15 |
+   | `fake-frames.ts` | created in Task 6 (Step 2), used by timer and loop tests |
+   | `GameSession.discard()` | used by `GameFrame` (Task 10) |
+6. **Model selection** (per the skill):
+   - Tasks whose plan text contains complete code are transcription: cheapest tier (`haiku`) for mechanical single-file tasks (2, 3, 6, 7, 8, 12).
+   - Standard tier (`sonnet`) as the floor for multi-file integration (1, 4, 5, 9, 10, 11, 13, 14, 15, 16, 17) and for all reviewers.
+   - Final whole-branch review on the most capable model.
+   - Always pass `model` explicitly.
+7. **Hard stops during execution** (the only reasons to pause):
+   - **Task 15, Step 6:** visual baselines need Docker, and a human must look at the 6 screenshots.
+   - **Task 16, Step 5:** `gh repo create`, pushing and enabling Pages are publishing actions. Ask the author for the repo name, visibility and account first.
+   - Anything destructive or security-sensitive.
+   - Otherwise make rulings and keep going.
+8. **Finish.**
+   - After Task 17 and the final review, report every ledger `Ruling:` line to the author.
+   - Then use `superpowers:finishing-a-development-branch`.
+   - Update this HANDOFF.md, and write Plans 2 and 3.
+
+### Suggested resume prompt for the author
+
+> Resume tinkster: read `docs/HANDOFF.md`, then start executing Plan 1 subagent-driven as described in §10.
