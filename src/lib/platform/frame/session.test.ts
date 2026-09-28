@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRng } from '../rng';
 import { createSaves, memoryStore } from '../save';
-import type { AnyGame, GameModule, PausableTimer } from '../types';
+import { fakeFrames } from '../testing/fake-frames';
+import { RafTimer, type SyncedTimer } from '../timer.svelte';
+import type { AnyGame, GameModule } from '../types';
 import { GameSession, type SessionDeps } from './session.svelte';
 
 interface S {
@@ -142,11 +144,12 @@ describe('GameSession pause and meta', () => {
 });
 
 describe('GameSession timers', () => {
-	const fakeTimer = (): PausableTimer & { stop: ReturnType<typeof vi.fn> } => ({
+	const fakeTimer = (): SyncedTimer & { stop: ReturnType<typeof vi.fn> } => ({
 		durationMs: 1000,
 		remainingMs: 1000,
 		expired: false,
 		stop: vi.fn(() => {}),
+		sync: vi.fn(() => {}),
 	});
 
 	it('creates timers bound to the session pause state and replaces the previous one', () => {
@@ -165,5 +168,21 @@ describe('GameSession timers', () => {
 		const second = session.ctx.timer(2000, () => {});
 		expect(made[0]?.timer.stop).toHaveBeenCalled();
 		expect(session.timer).toBe(second);
+	});
+
+	it('does not charge a hidden interval to the timer, even with no frames while hidden', () => {
+		const frames = fakeFrames();
+		const { session } = setup({
+			createTimer: (ms, onExpire, isPaused) => new RafTimer(ms, onExpire, isPaused, frames),
+		});
+		const timer = session.ctx.timer(10_000, () => {});
+		frames.advance(1000);
+		frames.wait(200); // time before the hide still counts
+		session.setPause('hidden', true);
+		frames.wait(60_000); // hidden tabs get no animation frames
+		session.setPause('hidden', false);
+		frames.advance(300);
+		expect(timer.expired).toBe(false);
+		expect(timer.remainingMs).toBe(10_000 - 1000 - 200 - 300);
 	});
 });

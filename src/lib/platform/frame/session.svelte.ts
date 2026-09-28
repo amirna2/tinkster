@@ -1,16 +1,8 @@
 import { untrack } from 'svelte';
 import type { Rng } from '../rng';
 import type { Saves } from '../save';
-import { createRafTimer } from '../timer.svelte';
-import type {
-	AnyGame,
-	Feedback,
-	GameContext,
-	GameModule,
-	GameResult,
-	Options,
-	PausableTimer,
-} from '../types';
+import { createRafTimer, type SyncedTimer } from '../timer.svelte';
+import type { AnyGame, Feedback, GameContext, GameModule, GameResult, Options } from '../types';
 
 export type PauseReason = 'sheet' | 'hidden' | 'countdown' | 'ended';
 
@@ -18,7 +10,7 @@ export type TimerFactory = (
 	durationMs: number,
 	onExpire: () => void,
 	isPaused: () => boolean,
-) => PausableTimer;
+) => SyncedTimer;
 
 export interface SessionDeps<S> {
 	game: AnyGame;
@@ -38,7 +30,7 @@ export class GameSession<S> {
 	#reasons = $state<PauseReason[]>([]);
 	readonly paused = $derived(this.#reasons.length > 0);
 	meta = $state({ left: '', right: '' });
-	timer = $state.raw<PausableTimer | null>(null);
+	timer = $state.raw<SyncedTimer | null>(null);
 	readonly ctx: GameContext<S>;
 
 	#deps: SessionDeps<S>;
@@ -74,9 +66,14 @@ export class GameSession<S> {
 	}
 
 	setPause(reason: PauseReason, on: boolean): void {
-		const has = untrack(() => this.#reasons.includes(reason));
-		if (on && !has) this.#reasons.push(reason);
-		else if (!on && has) this.#reasons = this.#reasons.filter((r) => r !== reason);
+		untrack(() => {
+			const was = this.paused;
+			const has = this.#reasons.includes(reason);
+			if (on && !has) this.#reasons.push(reason);
+			else if (!on && has) this.#reasons = this.#reasons.filter((r) => r !== reason);
+			// Hidden tabs get no animation frames, so tell the timer now rather than on the next frame.
+			if (this.paused !== was) this.timer?.sync();
+		});
 	}
 
 	flush(): void {
