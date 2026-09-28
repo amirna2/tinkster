@@ -186,54 +186,57 @@
 <svelte:window onkeydown={onKeydown} />
 
 <div class="frame" data-testid="game-frame" data-paused={session?.paused ?? false}>
-	<TopBar
-		title={game.title}
-		onhome={goHome}
-		onrules={() => (sheet = 'rules')}
-		onmenu={() => (sheet = 'menu')}
-	/>
-	<div class="meta tabular">
-		<span>{session?.meta.left ?? ''}</span>
-		<span>{session?.meta.right ?? ''}</span>
-	</div>
-	{#if session?.timer}<TimerStrip timer={session.timer} />{/if}
+	<!-- The end card is modal: everything behind it is inert, so Tab stays in the card. -->
+	<div class="stage" inert={result !== null}>
+		<TopBar
+			title={game.title}
+			onhome={goHome}
+			onrules={() => (sheet = 'rules')}
+			onmenu={() => (sheet = 'menu')}
+		/>
+		<div class="meta tabular">
+			<span>{session?.meta.left ?? ''}</span>
+			<span>{session?.meta.right ?? ''}</span>
+		</div>
+		{#if session?.timer}<TimerStrip timer={session.timer} />{/if}
 
-	<main class="play">
-		{#if phase === 'loading'}
-			<p class="status">Loading…</p>
-		{:else if phase === 'failed-to-load'}
-			<div class="status" role="alert">
-				<p>This game couldn't load. Check your connection and try again.</p>
-				<Button onclick={() => location.reload()}>Retry</Button>
-			</div>
-		{:else if phase === 'start' && game.options}
-			<StartPanel fields={game.options} bind:values={options} onstart={start} />
-		{:else if mod && session}
-			{@const View = mod.View}
-			<svelte:boundary onerror={onGameError}>
-				{#key session}
-					<View {options} {saved} ctx={session.ctx} />
-				{/key}
-				{#if crash}{rethrow(crash.error)}{/if}
-				{#snippet failed(_error, reset)}
-					<div class="status" role="alert">
-						<p>Something broke.</p>
-						<div class="row">
-							<Button
-								variant="accent"
-								onclick={() => {
-									saved = null;
-									beginRun(false);
-									reset();
-								}}>Start over</Button
-							>
-							<Button onclick={goHome}>Home</Button>
+		<main class="play">
+			{#if phase === 'loading'}
+				<p class="status">Loading…</p>
+			{:else if phase === 'failed-to-load'}
+				<div class="status" role="alert">
+					<p>This game couldn't load. Check your connection and try again.</p>
+					<Button onclick={() => location.reload()}>Retry</Button>
+				</div>
+			{:else if phase === 'start' && game.options}
+				<StartPanel fields={game.options} bind:values={options} onstart={start} />
+			{:else if mod && session}
+				{@const View = mod.View}
+				<svelte:boundary onerror={onGameError}>
+					{#key session}
+						<View {options} {saved} ctx={session.ctx} />
+					{/key}
+					{#if crash}{rethrow(crash.error)}{/if}
+					{#snippet failed(_error, reset)}
+						<div class="status" role="alert">
+							<p>Something broke.</p>
+							<div class="row">
+								<Button
+									variant="accent"
+									onclick={() => {
+										saved = null;
+										beginRun(false);
+										reset();
+									}}>Start over</Button
+								>
+								<Button onclick={goHome}>Home</Button>
+							</div>
 						</div>
-					</div>
-				{/snippet}
-			</svelte:boundary>
-		{/if}
-	</main>
+					{/snippet}
+				</svelte:boundary>
+			{/if}
+		</main>
+	</div>
 
 	{#if sheet === 'rules' && mod}
 		<RulesSheet title={game.title} Rules={mod.Rules} onclose={closeSheet} />
@@ -253,6 +256,12 @@
 <style>
 	.frame {
 		position: relative;
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+	}
+	.stage {
 		flex: 1;
 		display: flex;
 		flex-direction: column;

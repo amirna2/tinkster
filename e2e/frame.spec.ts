@@ -86,6 +86,28 @@ test('finishing shows the end card and clears the save', async ({ page }) => {
 	await expect(page.getByRole('button', { name: 'Start' })).toBeVisible();
 });
 
+test('the end card keeps keyboard focus inside it', async ({ page, browserName }) => {
+	await start(page);
+	await page.getByRole('button', { name: 'Win' }).click();
+	const card = page.getByRole('dialog', { name: 'Done!' });
+	await expect(card.getByRole('button', { name: 'Play again' })).toBeFocused();
+	// WebKit only tabs to buttons with Option held, like Safari's default.
+	const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
+	const visited: string[] = [];
+	for (let i = 0; i < 4; i++) {
+		await page.keyboard.press(tab);
+		// Between cycles focus may briefly leave the page (body); it must never reach the frame behind.
+		const focus = await page.evaluate(() => {
+			const el = document.activeElement;
+			if (!el || el === document.body) return 'body';
+			return el.closest('[role="dialog"]') ? `card:${el.textContent?.trim()}` : el.outerHTML;
+		});
+		visited.push(focus);
+	}
+	expect(visited).toContain('card:Home');
+	expect(visited.filter((f) => f !== 'body' && !f.startsWith('card:'))).toEqual([]);
+});
+
 test('a crashing game is caught and can start over', async ({ page }) => {
 	await start(page);
 	await page.getByRole('button', { name: 'Crash' }).click();
