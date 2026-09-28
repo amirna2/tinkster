@@ -27,6 +27,12 @@ export interface LoopOptions {
 	step: () => void;
 	render: () => void;
 	isPaused: () => boolean;
+	/**
+	 * Called once if step() or render() throws; the loop has already stopped. Frame callbacks run
+	 * outside the frame's error boundary, so hand the error to something that rethrows it during
+	 * render. Without onError the error is logged.
+	 */
+	onError?: (error: unknown) => void;
 	frames?: FrameDeps;
 }
 
@@ -36,6 +42,7 @@ export function startLoop({
 	step,
 	render,
 	isPaused,
+	onError = (error) => console.error(error),
 	frames = browserFrames,
 }: LoopOptions): () => void {
 	let acc = 0;
@@ -48,8 +55,14 @@ export function startLoop({
 		const now = frames.now();
 		const elapsed = now - last;
 		last = now;
-		acc = isPaused() ? 0 : advance(acc, elapsed, stepMs, step);
-		render();
+		try {
+			acc = isPaused() ? 0 : advance(acc, elapsed, stepMs, step);
+			render();
+		} catch (error) {
+			stopped = true;
+			onError(error);
+			return;
+		}
 		handle = frames.raf(tick);
 	}
 

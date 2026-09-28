@@ -60,7 +60,7 @@ The `GameContext` (`ctx`) is your only connection to the platform:
 | `ctx.finish({ stamp, headline, detail?, reveal? })` | once, when the game ends; shows the end card and clears the save |
 | `ctx.setMeta(left, right?)` | status line under the top bar |
 | `ctx.paused` | reactive; while true, ignore input and don't advance |
-| `ctx.timer(ms, onExpire)` | a countdown that freezes while paused; the frame draws the red strip |
+| `ctx.timer(ms, onExpire)` | a countdown that freezes while paused; the frame draws the red strip, and an error thrown by `onExpire` shows the frame's error screen |
 | `ctx.rng` | seeded randomness (deterministic in e2e tests) |
 | `ctx.feedback.sound('tick' \| 'pop' \| 'stamp' \| 'fail')`, `.haptic('tap' \| 'success' \| 'error')` | game feel; sound respects the Sound setting, haptics are silent no-ops where unsupported |
 
@@ -101,6 +101,7 @@ import { attachSwipe, keyToDirection, TurnBuffer } from '$lib/platform/input/swi
 
 let canvas = $state<HTMLCanvasElement>();
 let root = $state<HTMLElement>();
+let crashed = $state.raw<{ error: unknown } | null>(null);
 const turns = new TurnBuffer(2);
 
 $effect(() => {
@@ -128,21 +129,33 @@ onMount(() => {
     },
     render: () => draw(canvas, game),
     isPaused: () => ctx.paused,
+    onError: (error) => {
+      crashed = { error };
+    },
   });
   return stop;
 });
+
+function rethrow(error: unknown): string {
+  throw error;
+}
 ```
 
 ```svelte
 <svelte:window {onkeydown} />
 <div bind:this={root} class="board">
   <canvas bind:this={canvas}></canvas>
+  {#if crashed}{rethrow(crashed.error)}{/if}
 </div>
 ```
 
 `root` is a wrapper that fills the play area (not the top bar), so a swipe anywhere over
 the board works while a swipe over the chrome doesn't.
 
+- `step` and `render` run from animation frames, outside the frame's error boundary. If
+  either throws, `startLoop` stops and calls `onError`; rethrowing the error while rendering
+  (the `{#if crashed}` line) hands it to the boundary, which shows "Something broke" and
+  clears the save. Without `onError` the error is only logged and the game just freezes.
 - `startLoop` never steps while `ctx.paused` is true and never "catches up" afterwards.
   The frame shows a 3-2-1 countdown on resume for `pace: 'realtime'` and `'timed'` games.
 - Canvas colors: read tokens at draw time so dark mode works:

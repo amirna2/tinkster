@@ -31,6 +31,12 @@
 	>
 	<button onclick={() => ctx.finish({ stamp: 'Done!', headline: `Count ${count}` })}>Win</button>
 	<button onclick={() => (crashed = true)}>Crash</button>
+	<button
+		onclick={() =>
+			ctx.timer(1, () => {
+				throw new Error('fixture timer crash');
+			})}>Throw from timer</button
+	>
 	{#if crashed}{crash()}{/if}
 </div>
 

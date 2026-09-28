@@ -33,6 +33,7 @@ const module = {
 function setup(over: Partial<SessionDeps<S>> = {}) {
 	const saves = createSaves(memoryStore());
 	const onFinish = vi.fn();
+	const onError = vi.fn();
 	const session = new GameSession<S>({
 		game,
 		module,
@@ -41,11 +42,12 @@ function setup(over: Partial<SessionDeps<S>> = {}) {
 		rng: createRng(1),
 		feedback: { sound: vi.fn(), haptic: vi.fn() },
 		onFinish,
+		onError,
 		now: () => 1234,
 		debounceMs: 300,
 		...over,
 	});
-	return { session, saves, onFinish };
+	return { session, saves, onFinish, onError };
 }
 
 beforeEach(() => {
@@ -184,5 +186,21 @@ describe('GameSession timers', () => {
 		frames.advance(300);
 		expect(timer.expired).toBe(false);
 		expect(timer.remainingMs).toBe(10_000 - 1000 - 200 - 300);
+	});
+
+	it('hands an error thrown by onExpire to onError instead of throwing into the frame loop', () => {
+		let expire = () => {};
+		const { session, onError } = setup({
+			createTimer: (_ms, onExpire) => {
+				expire = onExpire;
+				return fakeTimer();
+			},
+		});
+		const boom = new Error('expire');
+		session.ctx.timer(1000, () => {
+			throw boom;
+		});
+		expect(() => expire()).not.toThrow();
+		expect(onError).toHaveBeenCalledExactlyOnceWith(boom);
 	});
 });

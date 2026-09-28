@@ -32,6 +32,8 @@
 	let result = $state.raw<GameResult | null>(null);
 	let sheet = $state<'rules' | 'menu' | null>(null);
 	let countingDown = $state(false);
+	/** An error from a game callback outside the boundary (a timer's onExpire), rethrown inside it. */
+	let crash = $state.raw<{ error: unknown } | null>(null);
 	let runs = 0;
 
 	const timed = $derived(game.pace !== 'turn-based');
@@ -74,6 +76,7 @@
 		session?.dispose();
 		result = null;
 		sheet = null;
+		crash = null;
 		const seed = seedFromUrl(location.href, runs++) ?? randomSeed();
 		session = new GameSession<unknown>({
 			game,
@@ -85,6 +88,9 @@
 			onFinish: (r) => {
 				result = r;
 				feedback.sound('stamp');
+			},
+			onError: (error) => {
+				crash = { error };
 			},
 		});
 		countingDown = resuming && timed;
@@ -158,6 +164,10 @@
 		session?.discard();
 		saves.clearSlot(game.id);
 	}
+
+	function rethrow(error: unknown): string {
+		throw error;
+	}
 </script>
 
 <svelte:document onvisibilitychange={onVisibility} />
@@ -192,6 +202,7 @@
 				{#key session}
 					<View {options} {saved} ctx={session.ctx} />
 				{/key}
+				{#if crash}{rethrow(crash.error)}{/if}
 				{#snippet failed(_error, reset)}
 					<div class="status" role="alert">
 						<p>Something broke.</p>

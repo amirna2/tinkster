@@ -20,6 +20,8 @@ export interface SessionDeps<S> {
 	rng: Rng;
 	feedback: Feedback;
 	onFinish: (result: GameResult) => void;
+	/** Errors thrown by game callbacks that run outside the frame's error boundary. */
+	onError: (error: unknown) => void;
 	now?: () => number;
 	debounceMs?: number;
 	createTimer?: TimerFactory;
@@ -54,7 +56,15 @@ export class GameSession<S> {
 			feedback: deps.feedback,
 			timer: (durationMs, onExpire) => {
 				this.timer?.stop();
-				const timer = (deps.createTimer ?? createRafTimer)(durationMs, onExpire, () => this.paused);
+				// onExpire runs from an animation frame, outside the frame's error boundary.
+				const expire = () => {
+					try {
+						onExpire();
+					} catch (error) {
+						deps.onError(error);
+					}
+				};
+				const timer = (deps.createTimer ?? createRafTimer)(durationMs, expire, () => this.paused);
 				this.timer = timer;
 				return timer;
 			},

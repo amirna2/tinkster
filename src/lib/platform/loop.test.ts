@@ -72,4 +72,64 @@ describe('startLoop', () => {
 		expect(render).toHaveBeenCalledTimes(1);
 		expect(frames.pending).toBe(0);
 	});
+
+	it('stops and hands an error thrown by step() to onError', () => {
+		const frames = fakeFrames();
+		const boom = new Error('step');
+		const render = vi.fn();
+		const onError = vi.fn();
+		startLoop({
+			stepMs: () => 10,
+			step: () => {
+				throw boom;
+			},
+			render,
+			isPaused: () => false,
+			frames,
+			onError,
+		});
+		frames.advance(16);
+		frames.advance(16);
+		expect(onError).toHaveBeenCalledExactlyOnceWith(boom);
+		expect(render).not.toHaveBeenCalled();
+		expect(frames.pending).toBe(0);
+	});
+
+	it('stops and hands an error thrown by render() to onError', () => {
+		const frames = fakeFrames();
+		const boom = new Error('render');
+		const onError = vi.fn();
+		startLoop({
+			stepMs: () => 100,
+			step: () => {},
+			render: () => {
+				throw boom;
+			},
+			isPaused: () => false,
+			frames,
+			onError,
+		});
+		frames.advance(16);
+		expect(onError).toHaveBeenCalledExactlyOnceWith(boom);
+		expect(frames.pending).toBe(0);
+	});
+
+	it('logs the error when no onError is given (never silent)', () => {
+		const frames = fakeFrames();
+		const boom = new Error('render');
+		const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+		startLoop({
+			stepMs: () => 100,
+			step: () => {},
+			render: () => {
+				throw boom;
+			},
+			isPaused: () => false,
+			frames,
+		});
+		expect(() => frames.advance(16)).not.toThrow();
+		expect(log).toHaveBeenCalledWith(boom);
+		expect(frames.pending).toBe(0);
+		log.mockRestore();
+	});
 });

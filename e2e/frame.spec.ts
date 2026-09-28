@@ -82,6 +82,22 @@ test('a crashing game is caught and can start over', async ({ page }) => {
 	await expect(page.getByTestId('count')).toHaveText('0');
 });
 
+test('an error in a timer callback is caught, clears the save and can start over', async ({
+	page,
+}) => {
+	await start(page);
+	await page.getByRole('button', { name: 'Add one' }).click();
+	await page.getByRole('button', { name: 'Throw from timer' }).click();
+	await expect(page.getByRole('alert')).toContainText('Something broke.');
+	await page.reload();
+	await expect(page.getByRole('button', { name: 'Start' })).toBeVisible(); // slot was cleared
+	await start(page);
+	await page.getByRole('button', { name: 'Throw from timer' }).click();
+	await page.getByRole('button', { name: 'Start over' }).click();
+	await expect(page.getByTestId('count')).toHaveText('0');
+	await expect(page.getByRole('alert')).toBeHidden();
+});
+
 test('rules sheet opens and closes', async ({ page }) => {
 	await page.getByRole('button', { name: 'How to play' }).click();
 	const sheet = page.getByRole('dialog', { name: 'How to play Test Fixture' });
