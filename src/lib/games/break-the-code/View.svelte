@@ -22,6 +22,7 @@
 	);
 	let rejection = $state<Rejection | null>(null);
 	let nudge = $state(0);
+	let pad = $state<HTMLElement>();
 
 	const REASON: Record<Rejection, string> = {
 		'too-short': 'Fill every slot first',
@@ -77,9 +78,19 @@
 		);
 	}
 
+	/** A focused control outside the keypad (Home, Menu, ...) keeps Enter and Backspace for itself. */
+	function controlFocused(target: EventTarget | null): boolean {
+		return (
+			target instanceof Element &&
+			!pad?.contains(target) &&
+			target.closest('a, button, input, select, textarea, [tabindex]') !== null
+		);
+	}
+
 	function onkeydown(e: KeyboardEvent): void {
 		if (e.metaKey || e.ctrlKey || e.altKey || ctx.paused || game.status !== 'playing') return;
 		if (/^[0-9]$/.test(e.key)) act({ type: 'digit', digit: Number(e.key) });
+		else if (controlFocused(e.target)) return;
 		else if (e.key === 'Backspace') act({ type: 'backspace' });
 		else if (e.key === 'Enter') act({ type: 'submit' });
 		else return;
@@ -135,7 +146,7 @@
 		</p>
 	{/key}
 
-	<div class="pad" role="group" aria-label="Keypad">
+	<div class="pad" role="group" aria-label="Keypad" bind:this={pad}>
 		<div class="keys">
 			{#each KEYS as key (key)}
 				<button class="key" onclick={() => act({ type: 'digit', digit: key })}>{key}</button>

@@ -70,3 +70,19 @@ test('hard mode allows repeated digits and has 10 guesses', async ({ page }) => 
 	await enterGuess(page, [7, 7, 7, 7, 7]);
 	await expect(page.getByText('Guess 2 of 10')).toBeVisible();
 });
+
+test('Enter on a focused top-bar button activates it instead of submitting a guess', async ({
+	page,
+}) => {
+	await startBreakTheCode(page);
+	const guess = wrongCode(secretFor(0));
+	await page.getByRole('button', { name: 'Menu' }).focus();
+	await page.keyboard.type(guess.join('')); // digits still type while a control has focus
+	await page.keyboard.press('Enter');
+	await expect(page.getByRole('dialog', { name: 'Menu' })).toBeVisible();
+	await page.keyboard.press('Escape');
+	await expect(page.getByText('Guess 1 of 8')).toBeVisible();
+	await expect(
+		page.getByRole('listitem', { name: `Current guess: ${guess.join(' ')}` }),
+	).toBeVisible();
+});

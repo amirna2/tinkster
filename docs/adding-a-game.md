@@ -72,22 +72,35 @@ Buttons in the bottom third of the screen, plus `<svelte:window onkeydown={…} 
 desktop keys. Call `e.preventDefault()` only for the keys you actually handle, and check
 `ctx.paused` and whether the game has already ended before handling anything, so Enter still
 reaches the rules sheet and the end-card buttons while paused or once the game is over.
-Break the Code's `View.svelte` shows the pattern:
+Leave Enter, Space and Backspace to a focused control outside your own keypad, too: a
+keyboard user who tabs to Home, `?` or Menu and presses Enter means that button, not
+"submit". Break the Code's `View.svelte` shows the pattern (its keypad wrapper has
+`bind:this={pad}`):
 
 ```ts
+/** A focused control outside the keypad (Home, Menu, ...) keeps Enter and Backspace for itself. */
+function controlFocused(target: EventTarget | null): boolean {
+	return (
+		target instanceof Element &&
+		!pad?.contains(target) &&
+		target.closest('a, button, input, select, textarea, [tabindex]') !== null
+	);
+}
+
 function onkeydown(e: KeyboardEvent): void {
-  if (e.metaKey || e.ctrlKey || e.altKey || ctx.paused || game.status !== 'playing') return;
-  if (/^[0-9]$/.test(e.key)) act({ type: 'digit', digit: Number(e.key) });
-  else if (e.key === 'Backspace') act({ type: 'backspace' });
-  else if (e.key === 'Enter') act({ type: 'submit' });
-  else return;
-  e.preventDefault();
+	if (e.metaKey || e.ctrlKey || e.altKey || ctx.paused || game.status !== 'playing') return;
+	if (/^[0-9]$/.test(e.key)) act({ type: 'digit', digit: Number(e.key) });
+	else if (controlFocused(e.target)) return;
+	else if (e.key === 'Backspace') act({ type: 'backspace' });
+	else if (e.key === 'Enter') act({ type: 'submit' });
+	else return;
+	e.preventDefault();
 }
 ```
 
 It returns early — without calling `preventDefault()` — whenever the game is paused or
-no longer playing, and it only calls `preventDefault()` after a key it recognized was
-actually handled.
+no longer playing, or when a control outside the keypad has focus (digits still type
+then), and it only calls `preventDefault()` after a key it recognized was actually handled.
 
 ### Real-time games
 Use the fixed-step loop and swipe input from the platform. Bind swipe to the view's own
