@@ -46,8 +46,13 @@ frame owns chrome, pause, resume slots, the end card and error recovery.
    `src/lib/platform/registry.ts` — the only platform file the change touches.
 5. Add `e2e/<id>.spec.ts`: start → a deterministic end → end card → Play again, plus
    resume from the home screen.
-6. Run the gates: `npm test && npm run check && npm run lint && npm run test:e2e &&
-   npm run build && npm run size`.
+6. Add the game to the shared gate specs, which name each game explicitly:
+   `e2e/a11y.spec.ts` (in progress and end card, both color schemes),
+   `e2e/offline.spec.ts` (start it while offline) and `e2e/visual.spec.ts` (in play, both
+   color schemes). Regenerate the baselines with `npm run test:visual:update` (Docker),
+   inspect every new PNG and commit them.
+7. Run the gates: `npm test && npm run check && npm run lint && npm run test:e2e &&
+   npm run build && npm run size`, then `npm run test:visual`.
 
 Full details, including the `View.svelte` contract and turn-based vs. real-time input,
 are in [docs/adding-a-game.md](docs/adding-a-game.md).

@@ -236,20 +236,77 @@ In `src/lib/platform/registry.ts`: import your `GameDefinition` and add it to th
 array — one import and one array entry, nothing else in the file changes. Its position
 within its category is its position on the home screen.
 
-## 10. End-to-end test
+## 10. End-to-end tests
+
+### Your game's spec
 Create `e2e/<id>.spec.ts`. Open `play/<id>?seed=N`, and the game's RNG is seeded with `N`
 (`N + 1` after one "Play again", and so on). Compute the expected setup in the test by
 importing your `rules.ts` and `createRng` from `src/lib/platform/rng`, as
 `e2e/helpers.ts` does for Break the Code. Cover: start → a deterministic win or end →
 end card → Play again, plus resume from the home screen.
 
+Put a start helper next to `startBreakTheCode` in `e2e/helpers.ts`, e.g.
+`startMyGame(page)`: it opens `play/<id>?seed=${SEED}`, picks options if the game has
+any, taps Start, and waits until the board is ready. The three shared specs below use it.
+
+### The shared gate specs (required)
+The accessibility, offline and visual-regression gates cover **every** game (spec §10),
+but their specs name each game explicitly. A new game is not covered until you add it to
+all three:
+
+1. **`e2e/a11y.spec.ts`**: inside the `for (const colorScheme of ['light', 'dark'])`
+   block, next to the Break the Code tests, add an audit of your game in progress and of
+   its end card (plus its start panel if it has options):
+
+   ```ts
+   test('my game in progress', async ({ page }) => {
+     await startMyGame(page);
+     // make a move or two, so the board shows real state
+     await audit(page);
+   });
+
+   test('my game end card', async ({ page }) => {
+     await startMyGame(page);
+     // reach a deterministic end (the seed makes it reproducible)
+     await expect(page.getByRole('dialog', { name: 'Game over' })).toBeVisible();
+     await audit(page);
+   });
+   ```
+
+2. **`e2e/offline.spec.ts`**: after the line `await startBreakTheCode(page);` add
+   `await startMyGame(page);`. The page is still offline there, so this proves your
+   game's chunk was precached.
+
+3. **`e2e/visual.spec.ts`**: inside the `for (const colorScheme ...)` block, add a
+   screenshot of your game in play:
+
+   ```ts
+   test('my game in play', async ({ page }) => {
+     await startMyGame(page);
+     // a few deterministic moves
+     await expect(page).toHaveScreenshot(`my-game-play-${colorScheme}.png`);
+   });
+   ```
+
+   The screenshot must be stable: `toHaveScreenshot` waits for two identical consecutive
+   captures, so a board that keeps moving never passes. For a real-time game, pick a
+   seeded moment where nothing moves. Then generate the baselines in the pinned Linux container and commit them:
+
+   ```bash
+   npm run test:visual:update   # Docker; writes e2e/visual.spec.ts-snapshots/*.png
+   ```
+
+   Open every new or changed PNG and check it shows what you meant before committing.
+   Don't run `npm run build` or other host builds while the container is running: both
+   write to the same `build/` folder.
+
 ## 11. Before opening the PR
 
 ```bash
-npm test && npm run check && npm run lint
+npm run format && npm test && npm run check && npm run lint
 npm run test:e2e
 npm run build && npm run size
-npm run test:visual   # add screenshots for your game if its look matters
+npm run test:visual   # Docker; must pass with your game's new baselines
 ```
 
 Then check `git diff --stat main -- src/lib/platform src/routes`. It should show only
