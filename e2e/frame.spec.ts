@@ -37,6 +37,18 @@ test('restart from the menu returns to the start panel', async ({ page }) => {
 	await expect(page.getByRole('button', { name: 'Start' })).toBeVisible(); // slot was cleared
 });
 
+test('restarting during the resume countdown drops the countdown', async ({ page }) => {
+	await start(page);
+	await page.getByRole('button', { name: 'Add one' }).click();
+	await page.reload();
+	await expect(page.getByTestId('countdown')).toBeVisible();
+	await page.keyboard.press('Escape');
+	await page.getByRole('button', { name: 'Restart game' }).click();
+	await expect(page.getByRole('button', { name: 'Start' })).toBeVisible();
+	// The 3-2-1 would otherwise run on for up to 1.8 s over the start panel.
+	await expect(page.getByTestId('countdown')).toHaveCount(0, { timeout: 300 });
+});
+
 test('opening the menu pauses the game and freezes the timer', async ({ page }) => {
 	await start(page);
 	const frame = page.getByTestId('game-frame');

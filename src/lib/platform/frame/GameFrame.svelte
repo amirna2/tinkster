@@ -124,6 +124,8 @@
 		saved = null;
 		sheet = null;
 		result = null;
+		countingDown = false;
+		session?.setPause('countdown', false);
 		if (game.options?.length) {
 			session = null;
 			phase = 'start';
