@@ -57,9 +57,20 @@
 		);
 		const onPageHide = () => session?.flush();
 		window.addEventListener('pagehide', onPageHide);
+		// A game with no frame button on mount (no options, or a resumed run) gets no gesture to
+		// unlock audio before its first rAF sound; unlock on the run's first tap or key instead.
+		const onFirstGesture = () => {
+			unlockSound();
+			window.removeEventListener('pointerdown', onFirstGesture, true);
+			window.removeEventListener('keydown', onFirstGesture, true);
+		};
+		window.addEventListener('pointerdown', onFirstGesture, true);
+		window.addEventListener('keydown', onFirstGesture, true);
 		return () => {
 			cancelled = true;
 			window.removeEventListener('pagehide', onPageHide);
+			window.removeEventListener('pointerdown', onFirstGesture, true);
+			window.removeEventListener('keydown', onFirstGesture, true);
 			session?.dispose();
 		};
 	});

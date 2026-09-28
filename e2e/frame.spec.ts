@@ -4,6 +4,31 @@ async function openFixture(page: Page) {
 	await page.goto('play/test-fixture?seed=1');
 }
 
+/** Wraps the page's AudioContext constructor so tests can observe contexts without any app-side hook. */
+async function trackAudioContexts(page: Page) {
+	await page.addInitScript(() => {
+		const Native = window.AudioContext;
+		const contexts: AudioContext[] = [];
+		(window as unknown as { __audioContexts: AudioContext[] }).__audioContexts = contexts;
+		window.AudioContext = new Proxy(Native, {
+			construct(target, args) {
+				const ctx = Reflect.construct(target, args) as AudioContext;
+				contexts.push(ctx);
+				return ctx;
+			},
+		}) as unknown as typeof AudioContext;
+	});
+}
+
+function audioContextStates(page: Page): Promise<string[]> {
+	return page.evaluate(
+		() =>
+			(window as unknown as { __audioContexts?: AudioContext[] }).__audioContexts?.map(
+				(c) => c.state,
+			) ?? [],
+	);
+}
+
 async function start(page: Page, mode: 'Calm' | 'Wild' = 'Calm') {
 	await page.getByRole('radio', { name: mode }).check();
 	await page.getByRole('button', { name: 'Start' }).click();
@@ -152,4 +177,25 @@ test('Escape opens the menu and closes it again', async ({ page }) => {
 test('the home button returns to the home page', async ({ page }) => {
 	await page.getByRole('button', { name: 'Home' }).click();
 	await expect(page).toHaveURL(/\/tinkster\/?$/);
+});
+
+test('unlocks the shared AudioContext on the first gesture when sound is already on', async ({
+	page,
+}) => {
+	await trackAudioContexts(page);
+	await openFixture(page);
+	await page.evaluate(() => {
+		localStorage.setItem('tinkster:prefs', JSON.stringify({ sound: true, options: {} }));
+	});
+	await page.reload();
+	await expect.poll(() => audioContextStates(page)).toHaveLength(0);
+	await page.keyboard.press('Shift'); // no Start/Menu tap: only the frame's first-gesture listener
+	await expect.poll(() => audioContextStates(page)).toEqual(['running']);
+});
+
+test('creates no AudioContext on the first gesture while sound is off', async ({ page }) => {
+	await trackAudioContexts(page);
+	await openFixture(page);
+	await page.keyboard.press('Shift');
+	await expect.poll(() => audioContextStates(page)).toHaveLength(0);
 });
