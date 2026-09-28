@@ -1,8 +1,13 @@
 # tinkster: session handoff
 
-- **Last updated:** 2026-09-27 (end of session 2: Plan 1 executed, reviewed, tested by the author)
-- **Status:** **Plan 1 is implemented** on `feat/v1-foundation`. All 17 tasks, a whole-branch review, one fix wave and an audio follow-up are done, with all gates green. The author tested it on a Mac and a phone: "looks very good", about 2 minutes to crack the code, and fluid UX. The published repo and PR are recorded in §4.
-- **Next action:** after the author merges the Plan 1 PR, write **Plan 2** (Letters & Numbers + word list) and **Plan 3** (Snake) against the real code (§6). §11 records what Plan 1 execution decided and deferred.
+- **Last updated:** 2026-09-27 (session 3: Plan 2 written)
+- **Status:**
+  - **Plan 1 is merged** (PR #1, squash commit `e7adab1`) and live at `https://amirna2.github.io/tinkster/`.
+  - **Plan 2 is written:** `docs/plans/2026-09-27-plan-2-letters-and-numbers.md`, 11 tasks. Its pure-logic code and tests (Tasks 2 and 4–7) were smoke-run against the real repo while writing: 70 tests pass, and svelte-check is clean.
+- **Next action:**
+  - The author reviews the plan's "Decisions" table (D1–D17).
+  - Then execute Plan 2 subagent-driven, following §10 and the plan's "Execution notes".
+  - §11 records what Plan 1 execution decided and deferred.
 
 ## 1. How to resume (read in this order)
 
@@ -88,7 +93,8 @@ Backlog, one spec each later:
 
 - Path: `~/dev/tinkster`. Remote: `github.com/amirna2/tinkster` (public). GitHub Pages builds from Actions.
 - `main` was bootstrapped from the approved `docs/v1-design` head: spec, plan, mockups and handoff, with no code.
-- `feat/v1-foundation` holds the Plan 1 implementation. It lives in the worktree `~/dev/tinkster/.worktrees/v1-foundation` (`.worktrees/` is gitignored) and is PR'd into `main`. The author merges.
+- The Plan 1 implementation (`feat/v1-foundation`) was squash-merged into `main` as `e7adab1`. Pushes to `main` deploy to Pages.
+- `docs/plan-2-letters-numbers` holds the Plan 2 document. Plan 2 executes on `feat/letters-and-numbers`, branched off `main`. The author merges.
 - `.gitignore` already covers `.superpowers/`, `node_modules/`, `.svelte-kit/`, `build/`, test output, `CLAUDE.md`, `AI_DEVELOPER.md`, `CONTEXT.md`.
 - `.superpowers/brainstorm/37841-1790539787/content/` (gitignored) holds every mockup round. The visual companion server is **stopped**. To reuse it: run `…/superpowers/<ver>/skills/brainstorming/scripts/start-server.sh --project-dir ~/dev/tinkster --open`.
 
@@ -110,14 +116,14 @@ All are committed and were reported to the author:
 ## 6. Next steps
 
 1. **Done:** Plan 1, subagent-driven. See §11.
-2. The author merges the Plan 1 PR. The first push to `main` deploys to `https://amirna2.github.io/tinkster/`.
-3. On the live site (HTTPS), check what LAN testing couldn't:
+2. **Done:** the author merged the Plan 1 PR; it is live at `https://amirna2.github.io/tinkster/`. Offline reload is verified in Chromium.
+3. On the live site (HTTPS), the author still checks what LAN testing couldn't:
    - offline after the first visit
    - install to home screen on iOS and Android
    - sound on an iPhone
    - the service worker updating after a second deploy
    - the deep link `/tinkster/play/break-the-code`
-4. Write **Plan 2** (Letters & Numbers + SCOWL word list pipeline) against the real code. It is the first game to use `ctx.timer`.
+4. **Written:** Plan 2 (Letters & Numbers + SCOWL word list pipeline), `docs/plans/2026-09-27-plan-2-letters-and-numbers.md`. Next, the author reviews its decisions, then it is executed subagent-driven.
 5. Write **Plan 3** (Snake) from `docs/adding-a-game.md` alone. Acceptance: `git diff --stat main -- src/lib/platform src/routes` shows only `registry.ts`.
 6. Before a public announcement, register a domain (`tinkster.games` or `tinkster.app`). Then set `BASE_PATH=''`.
 
@@ -278,4 +284,4 @@ Do these in order **after** the author says to start.
 
 ### Suggested resume prompt for the author
 
-> Resume tinkster: read `docs/HANDOFF.md` (§6 and §11), then write Plan 2 (Letters & Numbers) against the real code.
+> Resume tinkster: read `docs/HANDOFF.md` (§6, §10, §11), then execute `docs/plans/2026-09-27-plan-2-letters-and-numbers.md` subagent-driven, following its "Execution notes".
