@@ -8,6 +8,7 @@ export type AudioLike = Pick<
 export interface FeedbackDeps {
 	/** Sound preference; read on every call. */
 	enabled: () => boolean;
+	/** The audio context to play on; defaults to the app's shared one. */
 	audio?: () => AudioLike | null;
 	vibrate?: ((pattern: number | number[]) => boolean) | null;
 }
@@ -37,8 +38,31 @@ export const HAPTICS: Record<HapticName, number | number[]> = {
 	error: [50, 30, 50],
 };
 
-function defaultAudio(): AudioLike | null {
-	return typeof AudioContext === 'undefined' ? null : new AudioContext();
+let shared: AudioLike | null | undefined;
+
+/**
+ * The app's one AudioContext, created on first use; null where Web Audio is unavailable. One for
+ * the whole app because browsers cap how many can exist, and iOS unlocks each separately.
+ */
+function sharedAudio(): AudioLike | null {
+	if (shared === undefined)
+		shared = typeof AudioContext === 'undefined' ? null : new AudioContext();
+	return shared;
+}
+
+function wake(ac: AudioLike): void {
+	// Browsers refuse resume() outside a user gesture; the next gesture will try again.
+	if (ac.state === 'suspended') ac.resume().catch(() => {});
+}
+
+/**
+ * Creates and resumes the shared AudioContext. Platform-internal: the frame calls it from real
+ * user gestures (Start, Play again, Resume, turning Sound on), because iOS keeps audio silent
+ * until a context is resumed inside one, and real-time games play sounds from animation frames.
+ */
+export function unlockAudio(): void {
+	const ac = sharedAudio();
+	if (ac) wake(ac);
 }
 
 function defaultVibrate(): ((pattern: number | number[]) => boolean) | null {
@@ -64,17 +88,15 @@ function play(ac: AudioLike, tone: Tone): void {
 
 export function createFeedback({
 	enabled,
-	audio = defaultAudio,
+	audio = sharedAudio,
 	vibrate = defaultVibrate(),
 }: FeedbackDeps): Feedback {
-	let ac: AudioLike | null | undefined;
-
 	return {
 		sound(name) {
 			if (!enabled()) return;
-			if (ac === undefined) ac = audio();
+			const ac = audio();
 			if (!ac) return;
-			if (ac.state === 'suspended') void ac.resume();
+			wake(ac);
 			for (const tone of RECIPES[name]) play(ac, tone);
 		},
 		haptic(name) {

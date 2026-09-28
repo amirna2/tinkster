@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { createFeedback } from '../feedback';
+	import { createFeedback, unlockAudio } from '../feedback';
 	import { createRng, randomSeed } from '../rng';
 	import { browserStore, createSaves } from '../save';
 	import type { AnyGame, GameModule, GameResult, Options } from '../types';
@@ -98,7 +98,13 @@
 		phase = 'playing';
 	}
 
+	/** Call from user gestures only: iOS unlocks audio inside one (see unlockAudio). */
+	function unlockSound(): void {
+		if (prefs.sound) unlockAudio();
+	}
+
 	function start(): void {
+		unlockSound();
 		prefs.options[game.id] = $state.snapshot(options);
 		saves.writePrefs($state.snapshot(prefs));
 		saved = null;
@@ -106,11 +112,13 @@
 	}
 
 	function playAgain(): void {
+		unlockSound();
 		saved = null;
 		beginRun(false);
 	}
 
 	function restart(): void {
+		unlockSound();
 		session?.discard();
 		saves.clearSlot(game.id);
 		saved = null;
@@ -125,6 +133,7 @@
 	}
 
 	function closeSheet(): void {
+		unlockSound();
 		sheet = null;
 		if (timed && phase === 'playing' && !result) countingDown = true;
 	}
@@ -132,6 +141,7 @@
 	function toggleSound(): void {
 		prefs.sound = !prefs.sound;
 		saves.writePrefs($state.snapshot(prefs));
+		unlockSound();
 		if (prefs.sound) feedback.sound('pop');
 	}
 
