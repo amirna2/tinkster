@@ -52,7 +52,9 @@ same game. Use `createRng(seed)` from `$lib/platform/rng` for deterministic setu
 </script>
 ```
 
-The `GameContext` (`ctx`) is your only connection to the platform:
+A game imports only from `$lib/platform/…` (types, `rng`, `loop`, `input/swipe`) and its own
+folder; runtime services (save, finish, timer, rng, feedback, pause) come through `ctx`, the
+`GameContext`:
 
 | Call | When |
 |---|---|

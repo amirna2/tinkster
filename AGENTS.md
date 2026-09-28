@@ -11,8 +11,9 @@ TypeScript, prerendered with adapter-static, deployed to GitHub Pages.
 ## Architecture in one breath
 `src/lib/platform/` is the foundation: registry, game frame, saves, RNG, timer, loop,
 input, feedback, UI tokens. `src/lib/games/<id>/` holds one game each: pure `rules.ts`
-plus a `View.svelte` that talks to the platform only through `GameContext`. The frame owns
-chrome, pause, resume slots, the end card and error recovery.
+plus a `View.svelte`. A game imports only from `$lib/platform/…` and its own folder; runtime
+services (save, finish, timer, rng, feedback, pause) come through `ctx` (`GameContext`). The
+frame owns chrome, pause, resume slots, the end card and error recovery.
 
 ## Commands
 | Task | Command |
@@ -39,8 +40,8 @@ chrome, pause, resume slots, the end card and error recovery.
    `HowToPlay.svelte`, `module.ts`, `index.ts`, `icon.svg`.
 2. `rules.ts` is pure (no DOM, timers, `Math.random`, `Date`); `rules.test.ts` covers
    concrete cases plus `fast-check` properties.
-3. `View.svelte` talks to the platform only through `ctx` (`GameContext`) — no other
-   `$lib/platform` imports.
+3. A game imports only from `$lib/platform/…` and its own folder; runtime services (save,
+   finish, timer, rng, feedback, pause) come through `ctx` (`GameContext`).
 4. Import the `GameDefinition` and add it to the `games` array in
    `src/lib/platform/registry.ts` — the only platform file the change touches.
 5. Add `e2e/<id>.spec.ts`: start → a deterministic end → end card → Play again, plus
