@@ -18,6 +18,9 @@
 		"format": "biome check --write .",
 		"test": "vitest run --passWithNoTests",
 		"test:e2e": "playwright test --project=iphone-se --project=pixel-7",
+		"test:visual": "docker run --rm --ipc=host -v \"$PWD\":/work -v tinkster-node-modules:/work/node_modules -w /work mcr.microsoft.com/playwright:v1.63.0-noble bash -lc 'npm ci && npx playwright test --project=visual'",
+		"test:visual:update": "docker run --rm --ipc=host -v \"$PWD\":/work -v tinkster-node-modules:/work/node_modules -w /work mcr.microsoft.com/playwright:v1.63.0-noble bash -lc 'npm ci && npx playwright test --project=visual --update-snapshots'",
+		"size": "node scripts/check-size.mjs",
 		"icons": "node scripts/make-icons.mjs"
 	},
 	"devDependencies": {

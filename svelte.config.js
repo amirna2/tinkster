@@ -11,6 +11,23 @@ const config = {
 		serviceWorker: {
 			files: (filepath) => !/(^|\/)\./.test(filepath),
 		},
+		csp: {
+			mode: 'hash',
+			directives: {
+				'default-src': ['self'],
+				'script-src': ['self'],
+				// Svelte's server-rendered style="" attributes need 'unsafe-inline'; no third-party CSS exists.
+				'style-src': ['self', 'unsafe-inline'],
+				'img-src': ['self', 'data:'],
+				'font-src': ['self'],
+				'connect-src': ['self'],
+				'worker-src': ['self'],
+				'manifest-src': ['self'],
+				'object-src': ['none'],
+				'base-uri': ['self'],
+				'form-action': ['self'],
+			},
+		},
 	},
 };
 
