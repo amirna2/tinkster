@@ -1,8 +1,8 @@
 # tinkster: session handoff
 
-- **Last updated:** 2026-09-27 (end of session 1: brainstorm → spec → Plan 1 → execution mode chosen)
-- **Status:** Design approved, Plan 1 written. Execution mode decided: **subagent-driven**. **Nothing executed yet:** no feature branch, no worktree, no code.
-- **Next action:** start Plan 1 execution **only when the author says so** (see §6 and §10). The author paused before execution in order to compact the session.
+- **Last updated:** 2026-09-27 (end of session 2: Plan 1 executed, reviewed, tested by the author)
+- **Status:** **Plan 1 is implemented** on `feat/v1-foundation`. All 17 tasks, a whole-branch review, one fix wave and an audio follow-up are done, with all gates green. The author tested it on a Mac and a phone: "looks very good", about 2 minutes to crack the code, and fluid UX. The published repo and PR are recorded in §4.
+- **Next action:** after the author merges the Plan 1 PR, write **Plan 2** (Letters & Numbers + word list) and **Plan 3** (Snake) against the real code (§6). §11 records what Plan 1 execution decided and deferred.
 
 ## 1. How to resume (read in this order)
 
@@ -86,11 +86,9 @@ Backlog, one spec each later:
 
 ## 4. Current repository state
 
-- Path: `~/dev/tinkster`. Local git repo, **no remote yet**, **`main` has no commits** (unborn).
-- Branch `docs/v1-design` (checked out). Commits:
-  - `b041262` spec + mockups
-  - `21b615c` Plan 1 + spec alignment
-  - the commit adding this handoff
+- Path: `~/dev/tinkster`. Remote: `github.com/amirna2/tinkster` (public). GitHub Pages builds from Actions.
+- `main` was bootstrapped from the approved `docs/v1-design` head: spec, plan, mockups and handoff, with no code.
+- `feat/v1-foundation` holds the Plan 1 implementation. It lives in the worktree `~/dev/tinkster/.worktrees/v1-foundation` (`.worktrees/` is gitignored) and is PR'd into `main`. The author merges.
 - `.gitignore` already covers `.superpowers/`, `node_modules/`, `.svelte-kit/`, `build/`, test output, `CLAUDE.md`, `AI_DEVELOPER.md`, `CONTEXT.md`.
 - `.superpowers/brainstorm/37841-1790539787/content/` (gitignored) holds every mockup round. The visual companion server is **stopped**. To reuse it: run `…/superpowers/<ver>/skills/brainstorming/scripts/start-server.sh --project-dir ~/dev/tinkster --open`.
 
@@ -111,13 +109,17 @@ All are committed and were reported to the author:
 
 ## 6. Next steps
 
-1. **Decided:** Plan 1 runs **subagent-driven** (`superpowers:subagent-driven-development`): a fresh implementer subagent per task, a task review after each, and a final whole-branch review. **Wait for the author's go-ahead before starting.** Setup details are in §10.
-2. Workspace (from §10): isolated worktree on a new branch `feat/v1-foundation` created from `docs/v1-design` (`main` is unborn).
-3. Execute Tasks 1–17. Built-in stop points:
-   - **Task 15:** visual baselines need **Docker** (availability on the author's Mac is unknown), and a human must look at the six screenshots before they're committed.
-   - **Task 16:** **ask the author** before `gh repo create`, pushing, or enabling Pages. Confirm the repo name `tinkster`, visibility (public) and the account.
-4. After Plan 1 lands: write Plan 2 (Letters & Numbers + SCOWL word list pipeline) and Plan 3 (Snake) against the real code.
-5. Before public announcement: register a domain (`tinkster.games` or `tinkster.app`). Then set `BASE_PATH=''`.
+1. **Done:** Plan 1, subagent-driven. See §11.
+2. The author merges the Plan 1 PR. The first push to `main` deploys to `https://amirna2.github.io/tinkster/`.
+3. On the live site (HTTPS), check what LAN testing couldn't:
+   - offline after the first visit
+   - install to home screen on iOS and Android
+   - sound on an iPhone
+   - the service worker updating after a second deploy
+   - the deep link `/tinkster/play/break-the-code`
+4. Write **Plan 2** (Letters & Numbers + SCOWL word list pipeline) against the real code. It is the first game to use `ctx.timer`.
+5. Write **Plan 3** (Snake) from `docs/adding-a-game.md` alone. Acceptance: `git diff --stat main -- src/lib/platform src/routes` shows only `registry.ts`.
+6. Before a public announcement, register a domain (`tinkster.games` or `tinkster.app`). Then set `BASE_PATH=''`.
 
 ## 7. Conventions and working agreements
 
@@ -220,6 +222,60 @@ Do these in order **after** the author says to start.
    - Then use `superpowers:finishing-a-development-branch`.
    - Update this HANDOFF.md, and write Plans 2 and 3.
 
+§10 is kept as the record of how Plan 1 was run. Reuse it as the template for Plans 2 and 3.
+
+## 11. Plan 1 execution record (2026-09-27)
+
+**Outcome:**
+- 17 tasks, each reviewed. Three tasks needed one fix round each: T7 pointer capture, T10 fixture tree-shaking, T9 by ruling only.
+- A whole-branch review (Opus) returned "with fixes": 5 Important, 8 Minor.
+- One fix wave, then an author-approved audio follow-up.
+
+**Final gates:**
+
+| Gate | Result |
+|---|---|
+| Unit tests | 112 |
+| e2e | 75 passed, 1 skipped (offline is Chromium-only) |
+| Visual | 6/6 |
+| Home size | 39.4 / 100 KB |
+| Break the Code chunk | 2.7 / 50 KB |
+| Fonts | 105.4 / 110 KB |
+
+**Decisions that changed code relative to the plan** (all in git history):
+- `--scrim` token for the end-card overlay.
+- Break the Code key handling:
+  - lets keys through while paused or ended;
+  - leaves Enter to focused top-bar buttons.
+- `game.load()` failures are logged.
+- The fixture's `defineGame` is marked `/* @__PURE__ */`, so production builds drop it.
+- Swipe uses pointer capture.
+- The platform fixes from the final review:
+  - Timers pause the moment the tab is hidden (`sync()`).
+  - Loop and timer callback errors reach the error screen (`LoopOptions.onError`; the session wraps `onExpire`).
+  - A single shared AudioContext is unlocked by frame gestures and by the first gesture of a run.
+  - Restart ends the countdown.
+  - Everything behind the end card is inert.
+  - CI never cancels a Pages deploy.
+- Docs: registry wording (one import + one array entry), the swipe sample binds to the View root, the haptics wording, and the add-a-game guide now **requires** adding each new game to the a11y, offline and visual specs.
+- Biome: keep `linter.rules.recommended: true`. **Never run `biome migrate`**; it silently disables the recommended rules.
+
+**Known and deferred** (fine for v1; revisit when convenient):
+- `goHome` uses `goto('/')`, so browser Back after ← re-enters the game (spec §5.2 "back behaves like ←" isn't met exactly).
+- Offline navigation to an unknown URL is served the home HTML.
+- Reduced motion zeroes animations instead of the spec's plain cross-fades.
+- Swipe has no `isPrimary` filtering: a second finger replaces the origin.
+- `loop.ts` drops a partial step on pause, and schedules one no-op frame after `stop()` from inside `step`.
+- `void ac.resume()` style best-effort audio calls.
+- Small duplication in `GameSession#finish()` / `discard()`.
+- A stale `crash` field on one `restart()` branch (unreachable).
+- Biome prints one info line about the `recommended` key.
+
+**Operational notes:**
+- Plain `npm run build` needs at least one registered real game, because every route is prerendered.
+- Don't run host builds while the Docker visual container runs: they share a bind mount and race.
+- `npm run preview -- --host` serves the production build on the LAN for phone testing. Offline, install and iOS audio need HTTPS, so test those on Pages.
+
 ### Suggested resume prompt for the author
 
-> Resume tinkster: read `docs/HANDOFF.md`, then start executing Plan 1 subagent-driven as described in §10.
+> Resume tinkster: read `docs/HANDOFF.md` (§6 and §11), then write Plan 2 (Letters & Numbers) against the real code.

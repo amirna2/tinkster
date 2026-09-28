@@ -1,0 +1,41 @@
+{
+	"name": "tinkster",
+	"version": "0.0.0",
+	"private": true,
+	"description": "Short, simple, offline mini-games for when you're stuck waiting. No accounts, no tracking.",
+	"license": "MIT",
+	"type": "module",
+	"engines": {
+		"node": ">=22"
+	},
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"build:test": "PUBLIC_TEST_HOOKS=1 vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
+		"lint": "biome check .",
+		"format": "biome check --write .",
+		"test": "vitest run --passWithNoTests",
+		"test:e2e": "playwright test --project=iphone-se --project=pixel-7",
+		"test:visual": "docker run --rm --ipc=host -v \"$PWD\":/work -v tinkster-node-modules:/work/node_modules -w /work mcr.microsoft.com/playwright:v1.63.0-noble bash -lc 'npm ci && npx playwright test --project=visual'",
+		"test:visual:update": "docker run --rm --ipc=host -v \"$PWD\":/work -v tinkster-node-modules:/work/node_modules -w /work mcr.microsoft.com/playwright:v1.63.0-noble bash -lc 'npm ci && npx playwright test --project=visual --update-snapshots'",
+		"size": "node scripts/check-size.mjs",
+		"icons": "node scripts/make-icons.mjs"
+	},
+	"devDependencies": {
+		"@axe-core/playwright": "^4.13.0",
+		"@biomejs/biome": "^2.5.14",
+		"@playwright/test": "^1.63.0",
+		"@sveltejs/adapter-static": "^3.0.10",
+		"@sveltejs/kit": "^2.70.3",
+		"@sveltejs/vite-plugin-svelte": "^7.3.1",
+		"@types/node": "^22.20.4",
+		"fast-check": "^4.10.2",
+		"svelte": "^5.57.1",
+		"svelte-check": "^4.7.6",
+		"typescript": "^6.0.3",
+		"vite": "^8.3.1",
+		"vitest": "^5.0.2"
+	}
+}
